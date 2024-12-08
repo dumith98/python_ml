@@ -20,7 +20,7 @@ dataiter = iter(trainloader)
 imagens, etiquetas = next(dataiter)
 plt.imshow(imagens[0].numpy().squeeze(), cmap='gray_r')
 
-plt.show()
+# plt.show()
 # print(imagens[0].shape)
 # print(etiquetas[0].shape)
 
@@ -42,7 +42,7 @@ def treino(modelo,trainloader, device):
     inicio = time()
 
     criterio = nn.NLLLoss()
-    EPOCHS = 1
+    EPOCHS = 10
     modelo.train()
 
     for epoch in range(EPOCHS):
@@ -61,4 +61,39 @@ def treino(modelo,trainloader, device):
             otimizador.step()
 
             perda_acumulada += perda_instantanea.item()
+        else:
+            print('Epoch {} - perda resultatnte: {}'.format(epoch+1, perda_acumulada/len(trainloader)))
+    print('\nTempo de treino = ', time() - inicio)
 
+
+
+def validacao(modelo, valloader, device):
+    conta_corretas, conta_todas = 0, 0
+    for imagens, etiquetas in valloader:
+        for i in range(len(etiquetas)):
+            img = imagens[i].view(1,784)
+
+            with torch.no_grad():
+                logps = modelo(img.to(device))
+
+
+            ps = torch.exp(logps)
+            probab = list(ps.cpu().numpy()[i])
+            etiqueta_pred = probab.index(max(probab))
+            etiqueta_certa = etiquetas.numpy([i])
+            if etiqueta_certa == etiqueta_pred:
+                conta_corretas += 1
+            conta_todas +=1
+
+    print('Total de imagens testadas', conta_todas)
+    print('\nPrecisao do modelo = {}%'.format(conta_corretas*100/conta_todas))
+
+
+modelo = Modelo()
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+modelo.to(device)
+
+print(modelo.linear1)
+print(modelo.linear2)
+print(modelo.linear3)
